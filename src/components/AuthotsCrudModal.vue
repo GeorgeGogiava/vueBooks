@@ -1,28 +1,26 @@
 <template>
   <a-modal
-    :open="visible"
+    :visible="visible"
     :title="title"
     @ok="handleOk"
-    @cancel="emit('update:visible', false)"
+    @cancel="$emit('update:visible', false)"
     :confirmLoading="loading"
-    destroyOnClose
   >
-    <a-form :model="formState" :rules="rules" ref="formRef" layout="vertical">
-      <a-form-item label="Full Name" name="fullname">
-        <a-input v-model:value="formState.fullname" maxlength="50" />
+    <a-form :model="formState" layout="vertical">
+      <a-form-item label="Full Name" :validateStatus="serverError ? 'error' : ''" :help="serverError">
+        <a-input v-model:value="formState.fullname" />
       </a-form-item>
     </a-form>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
-import type { FormInstance } from 'ant-design-vue'
+import { ref, watch } from 'vue'
 
-// ✅ Move this to the top
 const props = defineProps<{
   visible: boolean
   title: string
+  initialData: { id: number; fullname: string } | null
 }>()
 
 const emit = defineEmits<{
@@ -30,39 +28,28 @@ const emit = defineEmits<{
   (e: 'submit', data: { fullname: string }): void
 }>()
 
-const formRef = ref<FormInstance>()
 const loading = ref(false)
+const formState = ref<{ fullname: string }>({ fullname: '' })
+const serverError = ref<string>('')
 
-const formState = reactive({
-  fullname: '',
-})
-
-const rules = {
-  fullname: [
-    { required: true, message: 'Full name is required', trigger: 'blur' },
-    { max: 50, message: 'Maximum 50 characters', trigger: 'blur' },
-  ],
-}
-
-// ✅ Fix: now `props` is defined before using it
 watch(
-  () => props.visible,
+  () => props.initialData,
   (newVal) => {
-    if (newVal) {
-      formState.fullname = ''
-    }
-  }
+    formState.value.fullname = newVal?.fullname || ''
+    serverError.value = ''
+  },
+  { immediate: true }
 )
 
-const handleOk = () => {
-  formRef.value?.validate().then(() => {
-    loading.value = true
-    setTimeout(() => {
-      loading.value = false
-      emit('submit', { fullname: formState.fullname })
-      emit('update:visible', false)
-    }, 300)
-  })
+const handleOk = async () => {
+  loading.value = true
+  serverError.value = ''
+  try {
+    await emit('submit', { fullname: formState.value.fullname })
+  } catch (e: any) {
+    serverError.value = e?.message || 'Unexpected error'
+  } finally {
+    loading.value = false
+  }
 }
-
 </script>

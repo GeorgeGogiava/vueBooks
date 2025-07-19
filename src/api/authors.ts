@@ -1,22 +1,74 @@
-import api from './axios'
+import api from '@/api/axios'
+import { Author,AuthorCreateDto,AuthorDeleteResponse, AuthorUpdateDto,AuthorInsertResult,AuthorUpdateResponse} from '@/types/author'
+import {ApiResponse} from '@/types/api-response'
 
-export const fetchAuthors = async () => {
+// 🔽 Fetch all authors
+export const fetchAuthors = async (): Promise<ApiResponse<Author[]>> => {
   try {
-    const response = await api.get('/authots-test')
-    return response.data
-  } catch (error) {
-    console.error('❌ Failed to fetch authors:', error)
-    return { success: false, data: [] }
+    const res = await api.get('/authots-test')
+    return res.data
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        status: error.response?.status || 500,
+        message: error.message,
+      },
+    }
   }
 }
 
-
-export const createAuthor = async (data: { fullname: string }) => {
+// 🔽 Create a new author
+export const createAuthor = async (
+  data: AuthorCreateDto
+): Promise<ApiResponse<Author>> => {
   try {
-    const response = await api.post('/authots-test', data)
-    return response.data
-  } catch (error) {
-    console.error('❌ Failed to create author:', error)
-    return { success: false }
+    const res = await api.post('/authots-test', data)
+    return res.data
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        status: error.response?.status || 500,
+        message: error.message,
+      },
+    }
+  }
+}
+
+// 🔽 Update an author
+export const updateAuthor = async (
+  id: number,
+  data: AuthorCreateDto
+): Promise<ApiResponse<AuthorUpdateResponse>> => {
+  try {
+    const res = await api.patch(`/authots-test/${id}`, data)
+    return res.data
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        status: error.response?.status || 500,
+        message: error.message,
+      },
+    }
+  }
+}
+
+// 🔽 Delete an author
+export const deleteAuthor = async (
+  id: number
+): Promise<ApiResponse<AuthorDeleteResponse>> => {
+  try {
+    const res = await api.delete(`/authots-test/${id}`)
+    return res.data
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        status: error.response?.status || 500,
+        message: error.message,
+      },
+    }
   }
 }
